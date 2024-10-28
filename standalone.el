@@ -1,3 +1,9 @@
+(setq column-number-mode t)
+(global-display-line-numbers-mode)
+(setq inhibit-startup-screen t)
+(setq-default indent-tabs-mode nil)
+(global-auto-revert-mode 1)
+
 ;; This is to support loading from a non-standard .emacs.d
 ;; via emacs -q --load "/path/to/standalone.el"
 ;; see https://emacs.stackexchange.com/a/4258/22184
@@ -61,3 +67,41 @@
   (set-face-attribute 'default nil :font "DejaVu Sans Mono-10")))
 
 (load-file (expand-file-name "init.el" user-emacs-directory))
+
+;; These are hacks until scala-mode support Scala-3 braceless syntax
+;; https://sideshowcoder.com/2021/12/30/new-scala-3-syntax-in-emacs/
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  :bind (:map projectile-mode-map
+              ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map)))
+
+(defun is-scala3-project ()
+  "Check if the current project is using scala3.
+
+Loads the build.sbt file for the project and search for the scalaVersion."
+  (projectile-with-default-dir (projectile-project-root)
+    (when (file-exists-p "build.sbt")
+      (with-temp-buffer
+        (insert-file-contents "build.sbt")
+        (search-forward "scalaVersion := \"3" nil t)))))
+
+(defun with-disable-for-scala3 (orig-scala-mode-map:add-self-insert-hooks &rest arguments)
+    "When using scala3 skip adding indention hooks."
+    (unless (is-scala3-project)
+      (apply orig-scala-mode-map:add-self-insert-hooks arguments)))
+
+(advice-add #'scala-mode-map:add-self-insert-hooks :around #'with-disable-for-scala3)
+
+(defun disable-scala-indent ()
+  "In scala 3 indent line does not work as expected due to whitespace grammar."
+  (when (is-scala3-project)
+    (setq indent-line-function 'indent-relative-maybe)))
+
+(add-hook 'scala-mode-hook #'disable-scala-indent)
+
+;; end of scala-3 indentation hacks
+
