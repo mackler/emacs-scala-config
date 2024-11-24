@@ -1,14 +1,79 @@
-# Emacs configuration for Scala development
+# Emacs Configuration for Scala I.D.E.
 
-This is not my original work.  It is a copy of Robert Krahn’s [Emacs configuration for Rust](https://github.com/rksm/emacs-rust-config),
-but with the Rust specific part replaced with the example configuration given in
-[the official Metals Emacs instructions](https://scalameta.org/metals/docs/editors/emacs/#installation).
+Inspired by Robert Krahn’s [Emacs configuration for Rust](https://github.com/rksm/emacs-rust-config),
+the example configuration given in
+[the official Metals Emacs instructions](https://scalameta.org/metals/docs/editors/emacs/#installation), and the [java_emacs](https://github.com/neppramod/java_emacs) configuration of [Pramod Nepal](https://github.com/neppramod).
 
-I have added a couple small configuration settings to my personal preferences, such as:
+Includes configuration settings according to my personal preferences, such as:
 
 - Displaying line numbers
 - Disabling tabs in favor of spaces
 - Auto-reloading buffers when files are changed outside Emacs
 - Running `scalafmt` automatically when saving a buffer
+- And more
 
-and probably others.  See the original sources for usage details.  Use at your own risk and pleasure.
+See the referenced sources for more usage details.
+
+## Uses Helm
+
+This setup uses Helm, so if you're not used to it you will be surprised when searching for a file to open works differently than you expect. [Read about it here.](https://emacs-helm.github.io/helm/)
+
+`C-x c` shows some Helm options.
+
+## Useful key combinations:
+
+### Language Server Protocol
+
+Control the LSP server with `C-c l` (lowercase L for LSP).  It brings up a menu that shows the keys for the options. For workspaces type `w`, and from there you can start, restart, and shutdown the LSP server.
+
+Or, instead of typing `w` for workspaces, use `g` as in "goto" for finding declarations, definitions, implementations, references and more, depending on what's under the text cursor.
+
+Some popular options have even shorter shortcuts.  For example
+`C-c l G g` will peek at the definition of the identifier at the text cursor but so will `M-.`
+
+#### LSP Sessions
+
+You might have issues because LSP is paying attention to sessions you're not working on.
+See the current sessions with:
+
+```elisp
+(lsp-session-folders (lsp-session))
+```
+
+Clear all the projects from LSP with: `M-x lsp-workspace-remove-all-folders`.
+
+
+## Projectile
+
+Projectile enables searching throughout the project in various ways.  To get to the options type `C-c p` which shows the further options.  For example, type `f` to search for a file.
+
+## Debugging
+
+Type `F-5` to start the debugger.
+
+Type `M-9` to see project errors in a separate buffer.
+
+## Project Explorer
+
+Opten the file explorer with `M-x treemacs`.  Treemacs has a separate idea of the project root than LSP, so you must load it separately into the file explorer.
+
+Within the Treemacs buffer `C-c C-p` shows options for adding and removing projects from the file explorer: `a` to add, `d` to delete, and so on.
+
+Treemacs shows other tree representations of your projects.  For example:
+
+* `M-x lsp-open-treemacs-symbols` displays symbols information
+* `M-x lsp-treemacs-references` shows references for the symbol at cursor
+* `M-x lsp-treemacs-implementations`  show the implementations for the symbol at cursor
+
+## Running Emacs
+
+Here is an example command script to start Emacs in Scala-IDE mode:
+
+```bash
+#!/usr/bin/env sh
+emacs --no-init-file --load /usr/local/repos/emacs-scala-config/init.el $@ &
+```
+
+## Conclusion and Summary
+
+Use at your own risk and pleasure.
