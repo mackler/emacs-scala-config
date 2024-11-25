@@ -113,11 +113,11 @@
   :config
   (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
   (define-key lsp-mode-map [C-down-mouse-1] 'lsp-find-definition)
+  (define-key lsp-mode-map [C-down-mouse-1] 'lsp-find-definition)
   ;; Uncomment following section if you would like to tune lsp-mode performance according to
   ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
   ;; (setq gc-cons-threshold 100000000) ;; 100mb
   ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
-  ;; (setq lsp-idle-delay 0.500)
   ;; (setq lsp-log-io nil)
 
   ;; can I delete the next line?
@@ -163,7 +163,7 @@
 ;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
 ;; to avoid odd behavior with snippets and indentation
 (use-package yasnippet :config (yas-global-mode))
-(use-package yasnippet-snippets :ensure t)
+(use-package yasnippet-snippets)
 
 ;; Use company-capf as a completion provider.
 (use-package company
@@ -186,6 +186,9 @@
   (dap-mode . dap-ui-mode)
   (dap-session-created . (lambda (&_rest) (dap-hydra)))
   (dap-terminated . (lambda (&_rest) (dap-hydra/nil)))
+  :config
+  (add-hook 'dap-stopped-hook
+          (lambda (arg) (call-interactively #'dap-hydra)))
 )
 
 (use-package projectile
@@ -210,6 +213,9 @@
   :init 
   (helm-mode 1)
   (progn (setq helm-buffers-fuzzy-matching t))
+  :hook (helm-after-initialize . (lambda ()
+                                    (with-current-buffer helm-buffer
+                                      (display-line-numbers-mode -1))))
   :bind
   (("C-c h" . helm-command-prefix))
   (("M-x" . helm-M-x))
@@ -220,11 +226,9 @@
   (("C-c g" . helm-grep-do-git-grep)))  ;; Search using grep in a git project
 
 (use-package helm-descbinds
-  :ensure t
   :bind ("C-h b" . helm-descbinds))
 
 (use-package helm-swoop
-  :ensure t
   ;; :chords
   ;; ("js" . helm-swoop)
   ;; ("jp" . helm-swoop-back-to-last-point)
@@ -263,7 +267,6 @@
   )
 
 (use-package quickrun 
-  :ensure t
   :bind ("C-c r" . quickrun))
 
 (use-package treemacs

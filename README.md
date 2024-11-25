@@ -16,7 +16,11 @@ See the referenced sources for more usage details.
 
 ## Uses Helm
 
-This setup uses Helm, so if you're not used to it you will be surprised when searching for a file to open works differently than you expect. [Read about it here.](https://emacs-helm.github.io/helm/)
+This setup uses Helm, so if you're not used to it you will be surprised when searching for a file to open works differently than you expect.  In particular `M-x` is bound to `helm-M-x` and `C-x b` is bound to `helm-buffers-list`.
+
+Use `C-c h` to see more helm commands.
+
+[Read more about it here.](https://emacs-helm.github.io/helm/)
 
 `C-x c` shows some Helm options.
 
@@ -31,6 +35,8 @@ Or, instead of typing `w` for workspaces, use `g` as in "goto" for finding decla
 Some popular options have even shorter shortcuts.  For example
 `C-c l G g` will peek at the definition of the identifier at the text cursor but so will `M-.`
 
+Ctrl-Clicking on a symbol (left mouse button) goes to its definition.
+
 #### LSP Sessions
 
 You might have issues because LSP is paying attention to sessions you're not working on.
@@ -40,8 +46,9 @@ See the current sessions with:
 (lsp-session-folders (lsp-session))
 ```
 
-Clear all the projects from LSP with: `M-x lsp-workspace-remove-all-folders`.
+Clear all the projects from LSP with: `M-x lsp-workspace-remove-all-folders`
 
+To remove just one project, use: `(lsp-workspace-folders-remove session-folder)`
 
 ## Projectile
 
@@ -52,6 +59,17 @@ Projectile enables searching throughout the project in various ways.  To get to 
 Type `F-5` to start the debugger.
 
 Type `M-9` to see project errors in a separate buffer.
+
+By default, the following windows auto hshow on debugging when in dap-ui-auto-configure-mode:
+
+* sessions
+* locals
+* breakpoints
+* expressions
+* controls
+* tooltip
+
+For more configuration details, see the [DAP Mode documentation](https://emacs-lsp.github.io/dap-mode/page/configuration/).
 
 ## Project Explorer
 
