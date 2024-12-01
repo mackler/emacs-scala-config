@@ -47,6 +47,7 @@
    version-control t   ;; use versioned backups
    auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" auto-save-dir)
    auto-save-file-name-transforms `((".*" ,auto-save-dir t))
+   ;; lockfiles can interact with the build tool & compiler so save them elsewhere
    lock-file-name-transforms
       `(("\\`/.*/\\([^/]+\\)\\'" ,(concat temporary-file-directory "/\\1") t))
 )
@@ -111,6 +112,7 @@
          (lsp-mode   . lsp-lens-mode)
          (lsp-mode   . lsp-enable-which-key-integration)
          (java-mode  . lsp-deferred)
+         (kill-emacs . lsp-workspace-remove-all-folders)
   :init
   (setq 
     ;; this is for which-key integration documentation, need to use lsp-mode-map
@@ -298,7 +300,11 @@
 (use-package lsp-treemacs
   :after (lsp-mode treemacs)
   :commands lsp-treemacs-errors-list
-  :config (add-hook 'treemacs-mode-hook (lambda () (display-line-numbers-mode -1)))
+  :init
+  (lsp-treemacs-sync-mode)
+  :config
+    (add-hook 'treemacs-mode-hook (lambda () (display-line-numbers-mode -1)))
+  ;; replaced with flycheck, commented here until we decide which is better
   ;; :bind (:map lsp-mode-map
   ;;             ("M-9" . lsp-treemacs-errors-list))
 )

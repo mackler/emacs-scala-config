@@ -39,15 +39,15 @@ Ctrl-Clicking on a symbol (left mouse button) goes to the definition of the symb
 
 #### LSP Sessions
 
-You might have issues because LSP is paying attention to sessions you're not working on.
-See the current sessions with:
+Currently, when you quit emacs, all LSP workspaces will be closed.  This means you will have to import them again the next time you open the project.
+
+I automated this removal because of issues with LSP paying attention to sessions I wasn't working on, and showing me errors I wasn't interested in.  You can clear all the projects from LSP manually with: `M-x lsp-workspace-remove-all-folders` but I was doing that so often I just made it automatic.  If removing workspaces automatically this way causes problems then I might revert to the default of workspaces persisting until you remove them even after emacs exits.
+
+You can see all the current sessions with:
 
 ```elisp
 (lsp-session-folders (lsp-session))
 ```
-
-Clear all the projects from LSP with: `M-x lsp-workspace-remove-all-folders`
-
 To remove just one project, use: `(lsp-workspace-folders-remove session-folder)`
 
 ## Projectile
