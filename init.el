@@ -5,10 +5,12 @@
 ;; basic emacs settings:
 (setq inhibit-startup-screen t)
 (setq-default indent-tabs-mode nil)
+(setq tab-width 2)
 (setq column-number-mode t)
 (global-display-line-numbers-mode)
 (global-auto-revert-mode 1) ;; auto-refresh files that change
 (setq visible-bell t)
+(setq kill-buffer-delete-auto-save-files t)
 
 ;; disable secondary selections (annoying)
 (global-unset-key [M-mouse-1])
@@ -33,16 +35,21 @@
 ;; directory as this file.
 ;; See https://www.emacswiki.org/emacs/BackupDirectory
 (setq user-cache-directory (expand-file-name ".cache" user-emacs-directory))
+(setq auto-save-dir (expand-file-name "autosave" user-cache-directory))
+(unless (file-exists-p auto-save-dir) (make-directory auto-save-dir t))
 (setq
    backup-by-copying t ;; don't clobber symlinks
    backup-directory-alist `(("." . ,(expand-file-name "backups" user-cache-directory)))
-   auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" user-cache-directory)
    url-history-file (expand-file-name "url/history" user-cache-directory)
    delete-old-versions t ;; delete excess backup versions silently
    kept-new-versions 6 ;; number of newest versions to keep when making new numbered backup
    kept-old-versions 2 ;; number of oldest versions to keep when making new numbered backup
    version-control t   ;; use versioned backups
-   auto-save-file-name-transforms `((".*" ,(expand-file-name "autosave" user-cache-directory) t)))
+   auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" auto-save-dir)
+   auto-save-file-name-transforms `((".*" ,auto-save-dir t))
+   lock-file-name-transforms
+      `(("\\`/.*/\\([^/]+\\)\\'" ,(concat temporary-file-directory "/\\1") t))
+)
 
 ;; packages:
 
@@ -90,9 +97,13 @@
    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
    (setq sbt:program-options '("-Dsbt.supershell=false")))
 
-;; Enable nice rendering of diagnostics like compile errors.
+;; Enable nice rendering of diagnostics, eg compile errors.
+;; https://www.flycheck.org
 (use-package flycheck
-  :init (global-flycheck-mode))
+  :init (global-flycheck-mode)
+  ;; TODO fix the column widths to diplay filename without truncation
+  ;; see https://github.com/flycheck/flycheck/blob/34.1/flycheck.el#L4989
+)
 
 (use-package lsp-mode
   ;; Enable lsp-mode automatically in scala files
@@ -113,7 +124,7 @@
   :config
   (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
   (define-key lsp-mode-map [C-down-mouse-1] 'lsp-find-definition)
-  (define-key lsp-mode-map [C-down-mouse-1] 'lsp-find-definition)
+
   ;; Uncomment following section if you would like to tune lsp-mode performance according to
   ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
   ;; (setq gc-cons-threshold 100000000) ;; 100mb
@@ -199,9 +210,18 @@
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 )
 
+;; https://github.com/nbfalcon/flycheck-projectile
 (use-package flycheck-projectile
+  :init
+  (add-to-list 'display-buffer-alist
+             `(,(rx bos "*Project errors*" eos)
+              (display-buffer-reuse-window
+               display-buffer-in-side-window)
+              (side            . bottom)
+              (reusable-frames . visible)
+              (window-height   . 0.33)))
   :bind (("M-9" . flycheck-projectile-list-errors))
-  )
+)
 
 (use-package use-package-chords
   :config (key-chord-mode 1)
@@ -217,13 +237,13 @@
                                     (with-current-buffer helm-buffer
                                       (display-line-numbers-mode -1))))
   :bind
-  (("C-c h" . helm-command-prefix))
-  (("M-x" . helm-M-x))
+  (("C-c h"   . helm-command-prefix))
+  (("M-x"     . helm-M-x))
   (("C-x C-f" . helm-find-files))
-  (("C-x b" . helm-buffers-list))
-  (("C-c b" . helm-bookmarks))
-  (("C-c f" . helm-recentf))   ;; Add new key to recentf
-  (("C-c g" . helm-grep-do-git-grep)))  ;; Search using grep in a git project
+  (("C-x b"   . helm-buffers-list))
+  (("C-c b"   . helm-bookmarks))
+  (("C-c f"   . helm-recentf))   ;; Add new key to recentf
+  (("C-c g"   . helm-grep-do-git-grep)))  ;; Search using grep in a git project
 
 (use-package helm-descbinds
   :bind ("C-h b" . helm-descbinds))
