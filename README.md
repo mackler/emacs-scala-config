@@ -35,7 +35,7 @@ Or, instead of typing `w` for workspaces, use `g` as in "goto" for finding decla
 Some popular options have even shorter shortcuts.  For example
 `C-c l G g` will peek at the definition of the identifier at the text cursor but so will `M-.`
 
-Ctrl-Clicking on a symbol (left mouse button) goes to its definition.
+Ctrl-Clicking on a symbol (left mouse button) goes to the definition of the symbol under the text cursor (not what's under the mouse pointer).
 
 #### LSP Sessions
 
@@ -60,7 +60,7 @@ Type `F-5` to start the debugger.
 
 Type `M-9` to see project errors in a separate buffer.
 
-By default, the following windows auto hshow on debugging when in dap-ui-auto-configure-mode:
+By default, the following windows auto show on debugging when in dap-ui-auto-configure-mode:
 
 * sessions
 * locals
