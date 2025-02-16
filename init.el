@@ -11,6 +11,7 @@
 (global-auto-revert-mode 1) ;; auto-refresh files that change
 (setq visible-bell t)
 (setq kill-buffer-delete-auto-save-files t)
+(show-paren-mode)
 
 ;; disable secondary selections (annoying)
 (global-unset-key [M-mouse-1])
@@ -120,6 +121,7 @@
     lsp-enable-file-watchers nil
     read-process-output-max (* 1024 1024)  ; 1 mb
     lsp-idle-delay 0.500
+    lsp-completion-provider :capf
     lsp-enable-on-type-formatting t
     lsp-format-on-save t
   )
@@ -140,7 +142,10 @@
   ;; https://emacs-lsp.github.io/lsp-mode/page/settings/mode/#lsp-keep-workspace-alive
   (setq lsp-keep-workspace-alive nil)
   (setq lsp-semantic-tokens-enable t)
-  (setq lsp-semantic-tokens-apply-modifiers nil))
+  (setq lsp-semantic-tokens-apply-modifiers nil)
+  (setq lsp-intelephense-multi-root nil) ; don't scan unnecessary projects
+  (with-eval-after-load 'lsp-intelephense
+    (setf (lsp--client-multi-root (gethash 'iph lsp-clients)) nil)))
 
 ;; Add metals backend for lsp-mode
 (use-package lsp-metals
@@ -309,6 +314,22 @@
   ;;             ("M-9" . lsp-treemacs-errors-list))
 )
 
-
 ;; partial (hopefully temporary) fix for scala-3 braceless indentation
-(load-file (expand-file-name "indentation-hack.el" user-emacs-directory))
+;; (load-file (expand-file-name "indentation-hack.el" user-emacs-directory))
+
+;; From the java emacs init
+
+(use-package ansi-color
+  :ensure t
+  :config
+  (add-hook 'compilation-filter-hook 'my/ansi-colorize-buffer)
+  )
+
+(use-package lsp-java
+  :ensure t
+  :config (add-hook 'java-mode-hook 'lsp)
+  (setq lsp-java-compile-null-analysis-mode "automatic") ; Enable automatic null analysis
+  (setq lsp-java-configuration-check-project-settings-exclusions t) ; Optional: Check project settings
+  (setq lsp-java-import-gradle-version "8.10.2"))
+(use-package dap-mode :after lsp-mode :config (dap-auto-configure-mode))
+(use-package dap-java :ensure nil)
