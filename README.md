@@ -35,7 +35,7 @@ Or, instead of typing `w` for workspaces, use `g` as in "goto" for finding decla
 Some popular options have even shorter shortcuts.  For example
 `C-c l G g` will peek at the definition of the identifier at the text cursor but so will `M-.`
 
-Ctrl-Clicking on a symbol (left mouse button) goes to the definition of the symbol under the text cursor (not what's under the mouse pointer).
+Ctrl-Clicking on a symbol (left mouse button) goes to the definition of the symbol under the text cursor (not what's under the mouse pointer).  The elisp function is `lsp-find-definition`.  To go back use `M-,`.
 
 #### LSP Sessions
 
