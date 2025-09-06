@@ -12,6 +12,11 @@
 (setq visible-bell t)
 (setq kill-buffer-delete-auto-save-files t)
 (show-paren-mode)
+(set-face-attribute 'default nil :height 94) ; 100 = 10pt (Emacs height is in 1/10 pt)
+(put 'downcase-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
+;; disable annoying, irreversible suspend-emacs keybinding
+(global-unset-key (kbd "C-z"))
 
 ;; disable secondary selections (annoying)
 (global-unset-key [M-mouse-1])
@@ -112,7 +117,7 @@
   :hook  (scala-mode . lsp-deferred)
          (lsp-mode   . lsp-lens-mode)
          (lsp-mode   . lsp-enable-which-key-integration)
-         (java-mode  . lsp-deferred)
+         ;; (java-mode  . lsp-deferred)
          (kill-emacs . lsp-workspace-remove-all-folders)
   :init
   (setq 
@@ -127,7 +132,7 @@
   )
   :config
   (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
-  (define-key lsp-mode-map [C-down-mouse-1] 'lsp-find-definition)
+  (define-key lsp-mode-map [C-down-mouse-1] 'lsp-find-definition-mouse)
 
   ;; Uncomment following section if you would like to tune lsp-mode performance according to
   ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
@@ -325,11 +330,12 @@
   (add-hook 'compilation-filter-hook 'my/ansi-colorize-buffer)
   )
 
-(use-package lsp-java
-  :ensure t
-  :config (add-hook 'java-mode-hook 'lsp)
-  (setq lsp-java-compile-null-analysis-mode "automatic") ; Enable automatic null analysis
-  (setq lsp-java-configuration-check-project-settings-exclusions t) ; Optional: Check project settings
-  (setq lsp-java-import-gradle-version "8.10.2"))
-(use-package dap-mode :after lsp-mode :config (dap-auto-configure-mode))
-(use-package dap-java :ensure nil)
+;; (use-package lsp-java
+;;   :ensure t
+;;   :config (add-hook 'java-mode-hook 'lsp)
+;;   (setq lsp-java-compile-null-analysis-mode "automatic") ; Enable automatic null analysis
+;;   (setq lsp-java-configuration-check-project-settings-exclusions t) ; Optional: Check project settings
+;;   (setq lsp-java-import-gradle-version "8.10.2"))
+;; (use-package dap-mode :after lsp-mode :config (dap-auto-configure-mode))
+;; (use-package dap-java :ensure nil)
+;; (put 'upcase-region 'disabled nil)
