@@ -88,11 +88,12 @@
 (use-package exec-path-from-shell)
 (exec-path-from-shell-initialize)
 
-;; Enable scala-mode for highlighting, indentation and motion commands
-(use-package scala-mode
-  :interpreter ("scala" . scala-mode)
-  :hook (scala-mode . (lambda ()
-                       (add-hook 'before-save-hook 'lsp-format-buffer nil 'local))))
+;; Enable scala-ts-mode for highlighting, indentation and motion commands
+(use-package scala-ts-mode
+  :mode ("\\.scala\\'" . scala-ts-mode)
+  :interpreter ("scala" . scala-ts-mode)
+  :hook (scala-ts-mode . (lambda ()
+                           (add-hook 'before-save-hook #'lsp-format-buffer nil 'local))))
 
 ;; Enable sbt mode for executing sbt commands
 (use-package sbt-mode
@@ -114,7 +115,7 @@
 
 (use-package lsp-mode
   ;; Enable lsp-mode automatically in scala files
-  :hook  (scala-mode . lsp-deferred)
+  :hook  (scala-ts-mode . lsp-deferred)
          (lsp-mode   . lsp-lens-mode)
          (lsp-mode   . lsp-enable-which-key-integration)
          ;; (java-mode  . lsp-deferred)
@@ -160,7 +161,7 @@
                             ;; Enable unicode icons.
                             "-J-Dmetals.icons=unicode"))
   (lsp-metals-enable-semantic-highlighting t)
-  :hook (scala-mode . lsp-deferred))
+  :hook (scala-ts-mode . lsp-deferred))
 
 ;; Enable nice rendering of documentation on hover
 ;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
@@ -190,7 +191,7 @@
 
 ;; Use company-capf as a completion provider.
 (use-package company
-  :hook (scala-mode . company-mode)
+  :hook (scala-ts-mode . company-mode)
   :config
   (setq lsp-completion-provider :capf))
 

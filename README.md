@@ -14,6 +14,14 @@ Includes configuration settings according to my personal preferences, such as:
 
 See the referenced sources for more usage details.
 
+## Uses Tree-sitter
+
+In order for the [Tree-Sitter](https://github.com/tree-sitter/tree-sitter) features to work, uou must install the [Scala grammar](https://github.com/tree-sitter/tree-sitter-scala).  In Emacs, invoke:
+
+    M-x treeset-install-language-grammar
+
+and choose `scala`.  I told it to build the shared library automatically, accepted all the defaults, and it seems to have worked.
+
 ## Uses Helm
 
 This setup uses Helm, so if you're not used to it you will be surprised when searching for a file to open works differently than you expect.  In particular `M-x` is bound to `helm-M-x` and `C-x b` is bound to `helm-buffers-list`.
