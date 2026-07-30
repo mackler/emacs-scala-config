@@ -96,7 +96,8 @@
 
 ;; Enable sbt mode for executing sbt commands
 (use-package sbt-mode
-  :commands sbt-start sbt-command
+  :commands (sbt-start sbt-command sbt-run-previous-command
+            sbt-do-compile sbt-do-test sbt-do-testquick sbt-do-run)
   :config
   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
   ;; allows using SPACE when in the minibuffer
@@ -134,8 +135,8 @@
     lsp-idle-delay 0.500
     lsp-enable-on-type-formatting nil
     lsp-format-buffer-on-save-list '(scala-ts-mode)
-    ;; temp (I hope) for debugging
-    ;; lsp-disabled-clients '(semgrep-ls)
+    ;; apparent mismatch between metals and semgrep? might be able to delete someday.
+    lsp-disabled-clients '(semgrep-ls)
     lsp-log-io nil
   )
   (setq-default lsp-format-buffer-on-save t)
@@ -161,11 +162,19 @@
 ;; Add metals backend for lsp-mode
 (use-package lsp-metals
   :custom
-  (lsp-metals-server-args '(;; Allow emacs to use indentation provided by scala-mode.
-                            ;; but later we switched to scala-ts-mode not scala-mode so commented
-                            ;; "-J-Dmetals.allow-multiline-string-formatting=off"
-                            ;; Enable unicode icons.
-                            "-J-Dmetals.icons=unicode"))
+  (lsp-metals-sbt-script "/home/mackler/.local/share/coursier/bin/sbt")
+  (lsp-metals-server-args
+   '("-J-Dmetals.icons=unicode"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
+     "-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"))
   (lsp-metals-enable-semantic-highlighting t))
 
 ;; Enable nice rendering of documentation on hover
@@ -306,23 +315,21 @@
 (use-package quickrun 
   :bind ("C-c r" . quickrun))
 
+(defun my/treemacs-no-line-numbers ()
+  (display-line-numbers-mode -1))
+
 (use-package treemacs
   :commands (treemacs)
-  :after (lsp-mode)
-  :config (setq treemacs-expand-after-init t)
-)
+  :config
+  (add-hook 'treemacs-mode-hook #'my/treemacs-no-line-numbers))
 
 (use-package lsp-treemacs
   :after (lsp-mode treemacs)
-  :commands lsp-treemacs-errors-list
-  :init
-  (lsp-treemacs-sync-mode)
-  :config
-    (add-hook 'treemacs-mode-hook (lambda () (display-line-numbers-mode -1)))
-  ;; replaced with flycheck, commented here until we decide which is better
-  ;; :bind (:map lsp-mode-map
-  ;;             ("M-9" . lsp-treemacs-errors-list))
-)
+  :bind ("M-8" . lsp-treemacs-errors-list)
+  :custom
+  (lsp-treemacs-error-list-current-project-only t)
+  (lsp-treemacs-error-list-expand-depth 3)
+  :init (lsp-treemacs-sync-mode 1))
 
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 (load custom-file t)
