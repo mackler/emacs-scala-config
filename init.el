@@ -5,7 +5,7 @@
 ;; basic emacs settings:
 (setq inhibit-startup-screen t)
 (setq-default indent-tabs-mode nil)
-(setq tab-width 2)
+(setq-default tab-width 2)
 (setq column-number-mode t)
 (global-display-line-numbers-mode)
 (global-auto-revert-mode 1) ;; auto-refresh files that change
@@ -64,8 +64,10 @@
 
 ;; Add some package repositories:
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'package-archives '("tromey" . "http://tromey.com/elpa/"))
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+
+(require 'treesit)
+(add-to-list 'treesit-language-source-alist
+             '(scala "https://github.com/tree-sitter/tree-sitter-scala"))
 
 ;; Load Emacs Lisp packages and activate them.
 (package-initialize)
@@ -89,11 +91,8 @@
 (exec-path-from-shell-initialize)
 
 ;; Enable scala-ts-mode for highlighting, indentation and motion commands
-(use-package scala-ts-mode
-  :mode ("\\.scala\\'" . scala-ts-mode)
-  :interpreter ("scala" . scala-ts-mode)
-  :hook (scala-ts-mode . (lambda ()
-                           (add-hook 'before-save-hook #'lsp-format-buffer nil 'local))))
+(use-package scala-ts-mode)
+(add-to-list 'major-mode-remap-alist '(scala-mode . scala-ts-mode))
 
 ;; Enable sbt mode for executing sbt commands
 (use-package sbt-mode
@@ -102,16 +101,22 @@
   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
   ;; allows using SPACE when in the minibuffer
   (substitute-key-definition 'minibuffer-complete-word 'self-insert-command minibuffer-local-completion-map)
-   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
-   (setq sbt:program-options '("-Dsbt.supershell=false")))
+  ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+  (setq sbt:program-options '("-Dsbt.supershell=false")))
 
 ;; Enable nice rendering of diagnostics, eg compile errors.
 ;; https://www.flycheck.org
 (use-package flycheck
-  :init (global-flycheck-mode)
-  ;; TODO fix the column widths to diplay filename without truncation
+  :init
+  ;; Metals supplies Scala diagnostics via lsp-mode's `lsp' checker.
+  ;; The built-in `scala' checker runs `scalac -Ystop-after:parser' and
+  ;; parses Scala 2 diagnostic syntax, so it fails on Scala 3 output.
+  ;; Thus we disable here:
+  (setq-default flycheck-disabled-checkers '(scala scala-scalastyle))
+  (global-flycheck-mode)
+  ;; TODO fix the column widths to display filename without truncation
   ;; see https://github.com/flycheck/flycheck/blob/34.1/flycheck.el#L4989
-)
+  )
 
 (use-package lsp-mode
   ;; Enable lsp-mode automatically in scala files
@@ -127,10 +132,13 @@
     lsp-enable-file-watchers nil
     read-process-output-max (* 1024 1024)  ; 1 mb
     lsp-idle-delay 0.500
-    lsp-completion-provider :capf
-    lsp-enable-on-type-formatting t
-    lsp-format-on-save t
+    lsp-enable-on-type-formatting nil
+    lsp-format-buffer-on-save-list '(scala-ts-mode)
+    ;; temp (I hope) for debugging
+    ;; lsp-disabled-clients '(semgrep-ls)
+    lsp-log-io nil
   )
+  (setq-default lsp-format-buffer-on-save t)
   :config
   (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
   (define-key lsp-mode-map [C-down-mouse-1] 'lsp-find-definition-mouse)
@@ -148,20 +156,17 @@
   ;; https://emacs-lsp.github.io/lsp-mode/page/settings/mode/#lsp-keep-workspace-alive
   (setq lsp-keep-workspace-alive nil)
   (setq lsp-semantic-tokens-enable t)
-  (setq lsp-semantic-tokens-apply-modifiers nil)
-  (setq lsp-intelephense-multi-root nil) ; don't scan unnecessary projects
-  (with-eval-after-load 'lsp-intelephense
-    (setf (lsp--client-multi-root (gethash 'iph lsp-clients)) nil)))
+  (setq lsp-semantic-tokens-apply-modifiers nil))
 
 ;; Add metals backend for lsp-mode
 (use-package lsp-metals
   :custom
   (lsp-metals-server-args '(;; Allow emacs to use indentation provided by scala-mode.
-                            "-J-Dmetals.allow-multiline-string-formatting=off"
+                            ;; but later we switched to scala-ts-mode not scala-mode so commented
+                            ;; "-J-Dmetals.allow-multiline-string-formatting=off"
                             ;; Enable unicode icons.
                             "-J-Dmetals.icons=unicode"))
-  (lsp-metals-enable-semantic-highlighting t)
-  :hook (scala-ts-mode . lsp-deferred))
+  (lsp-metals-enable-semantic-highlighting t))
 
 ;; Enable nice rendering of documentation on hover
 ;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
@@ -195,10 +200,8 @@
   :config
   (setq lsp-completion-provider :capf))
 
-;; Posframe is a pop-up tool that must be manually installed for dap-mode
-(use-package posframe)
-
 ;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package hydra)
 (use-package dap-mode
   :after (lsp-mode)
   :functions dap-hydra/nil
@@ -208,8 +211,8 @@
   :hook
   (lsp-mode . dap-mode)
   (dap-mode . dap-ui-mode)
-  (dap-session-created . (lambda (&_rest) (dap-hydra)))
-  (dap-terminated . (lambda (&_rest) (dap-hydra/nil)))
+  (dap-session-created . (lambda (&rest _) (dap-hydra)))
+  (dap-terminated . (lambda (&rest _) (dap-hydra/nil)))
   :config
   (add-hook 'dap-stopped-hook
           (lambda (arg) (call-interactively #'dap-hydra)))
@@ -245,7 +248,8 @@
 (use-package helm
   :init 
   (helm-mode 1)
-  (progn (setq helm-buffers-fuzzy-matching t))
+  (setq helm-ff-allow-non-existing-file-at-point t)
+  (setq helm-buffers-fuzzy-matching t)
   :hook (helm-after-initialize . (lambda ()
                                     (with-current-buffer helm-buffer
                                       (display-line-numbers-mode -1))))
@@ -320,23 +324,5 @@
   ;;             ("M-9" . lsp-treemacs-errors-list))
 )
 
-;; partial (hopefully temporary) fix for scala-3 braceless indentation
-;; (load-file (expand-file-name "indentation-hack.el" user-emacs-directory))
-
-;; From the java emacs init
-
-(use-package ansi-color
-  :ensure t
-  :config
-  (add-hook 'compilation-filter-hook 'my/ansi-colorize-buffer)
-  )
-
-;; (use-package lsp-java
-;;   :ensure t
-;;   :config (add-hook 'java-mode-hook 'lsp)
-;;   (setq lsp-java-compile-null-analysis-mode "automatic") ; Enable automatic null analysis
-;;   (setq lsp-java-configuration-check-project-settings-exclusions t) ; Optional: Check project settings
-;;   (setq lsp-java-import-gradle-version "8.10.2"))
-;; (use-package dap-mode :after lsp-mode :config (dap-auto-configure-mode))
-;; (use-package dap-java :ensure nil)
-;; (put 'upcase-region 'disabled nil)
+(add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
+(load custom-file t)

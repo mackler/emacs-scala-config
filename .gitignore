@@ -9,3 +9,4 @@ custom.el
 session.*
 tramp
 projects
+tree-sitter/libtree-sitter-scala.so

@@ -20,7 +20,12 @@ In order for the [Tree-Sitter](https://github.com/tree-sitter/tree-sitter) featu
 
     M-x treeset-install-language-grammar
 
-and choose `scala`.  I told it to build the shared library automatically, accepted all the defaults, and it seems to have worked.
+and choose `scala`. Or alternatively:
+
+    M-x treesit-install-language-grammar RET scala RET
+
+It compiles `tree-sitter/libtree-sitter-scala.so`.
+I told it to build the shared library automatically, accepted all the defaults, and it seems to have worked.
 
 ## Uses Helm
 
